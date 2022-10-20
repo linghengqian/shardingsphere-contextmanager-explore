@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import org.apache.shardingsphere.driver.jdbc.core.datasource.ShardingSphereDataSource;
 import org.apache.shardingsphere.infra.config.algorithm.AlgorithmConfiguration;
 import org.apache.shardingsphere.infra.config.rule.RuleConfiguration;
+import org.apache.shardingsphere.infra.metadata.database.rule.ShardingSphereRuleMetaData;
 import org.apache.shardingsphere.mode.manager.ContextManager;
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
 import org.apache.shardingsphere.sharding.rule.ShardingRule;
@@ -46,11 +47,11 @@ public class ContextManagerTests {
     void whenRequestToGetActualDataNodesByVintage() {
         String oldLogicTableName = "t_order_sharding_sphere";
         String oldDatabaseName = "sharding_db";
-        assertEquals(LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
+        assertEquals("ds-0.t_order_$->{20221010..20221011}",
+                LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
-                ),
-                "ds-0.t_order_$->{20221010..20221011}");
-        assertEquals(tOrderShardingSphereMapper.findAll().size(), 2);
+                ));
+        assertEquals(2, tOrderShardingSphereMapper.findAll().size());
     }
 
     @Test
@@ -61,11 +62,11 @@ public class ContextManagerTests {
         LocalShardingDatabasesAndTablesUtil.updateActualDataNodesByJupiter(
                 shardingSphereDataSource, oldDatabaseName, oldLogicTableName, newActualDataNodes
         );
-        assertEquals(LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
+        assertEquals("ds-0.t_order_$->{20221010..20221012}",
+                LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
-                ),
-                "ds-0.t_order_$->{20221010..20221012}");
-        assertEquals(tOrderShardingSphereMapper.findAll().size(), 3);
+                ));
+        assertEquals(3, tOrderShardingSphereMapper.findAll().size());
     }
 
     @Test
@@ -73,12 +74,12 @@ public class ContextManagerTests {
         String oldDatabaseName = "sharding_db";
         String oldLogicTableName = "t_order_sharding_sphere";
         ContextManager contextManager = getContextManager(shardingSphereDataSource);
-        Optional<ShardingRule> singleRule = contextManager.getMetaDataContexts()
+        ShardingSphereRuleMetaData ruleMetaData = contextManager.getMetaDataContexts()
                 .getMetaData()
                 .getDatabases()
                 .get(oldDatabaseName)
-                .getRuleMetaData()
-                .findSingleRule(ShardingRule.class);
+                .getRuleMetaData();
+        Optional<ShardingRule> singleRule = ruleMetaData.findSingleRule(ShardingRule.class);
         assert singleRule.isPresent();
         ShardingRuleConfiguration currentRuleConfig = (ShardingRuleConfiguration) singleRule.get().getConfiguration();
         Supplier<AlgorithmConfiguration> algorithmConfigurationSupplier = () -> {
@@ -94,11 +95,16 @@ public class ContextManagerTests {
         currentRuleConfig.getShardingAlgorithms().put("lingh-interval", algorithmConfigurationSupplier.get());
         Collection<RuleConfiguration> toBeAlteredRuleConfigList = new LinkedList<>();
         toBeAlteredRuleConfigList.add(currentRuleConfig);
+        ruleMetaData.getRules().forEach(shardingSphereRule -> {
+            if (!(shardingSphereRule instanceof ShardingRule)) {
+                toBeAlteredRuleConfigList.add(shardingSphereRule.getConfiguration());
+            }
+        });
         contextManager.alterRuleConfiguration(oldDatabaseName, toBeAlteredRuleConfigList);
-        assertEquals(LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
+        assertEquals("ds-0.t_order_$->{20221010..20221011}",
+                LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
-                ),
-                "ds-0.t_order_$->{20221010..20221011}");
+                ));
     }
 
     @SneakyThrows(ReflectiveOperationException.class)

@@ -36,10 +36,10 @@ public class ContextManagerTests {
     void whenRequestToGetActualDataNodesByVintage() {
         String oldLogicTableName = "t_order_sharding_sphere";
         String oldDatabaseName = "sharding_db";
-        assertEquals(LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
+        assertEquals("ds-0.t_order_$->{20221010..20221011}",
+                LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
-                ),
-                "ds-0.t_order_$->{20221010..20221011}");
+                ));
         assertThrows(MyBatisSystemException.class, () -> tOrderShardingSphereMapper.findAll());
     }
 
@@ -51,10 +51,10 @@ public class ContextManagerTests {
         LocalShardingDatabasesAndTablesUtil.updateActualDataNodesByJupiter(
                 shardingSphereDataSource, oldDatabaseName, oldLogicTableName, newActualDataNodes
         );
-        assertEquals(LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
+        assertEquals("ds-0.t_order_$->{20221010..20221012}",
+                LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
-                ),
-                "ds-0.t_order_$->{20221010..20221012}");
+                ));
         assertThrows(MyBatisSystemException.class, () -> tOrderShardingSphereMapper.findAll());
     }
 }

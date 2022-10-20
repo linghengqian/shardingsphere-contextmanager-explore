@@ -38,7 +38,7 @@ public class ContextManagerTests {
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
                 ),
                 "ds-0.t_order_$->{20221010..20221011}");
-        assertEquals(tOrderShardingSphereMapper.findAll().size(), 2);
+        assertEquals(2, tOrderShardingSphereMapper.findAll().size());
     }
 
     @Test
@@ -53,6 +53,6 @@ public class ContextManagerTests {
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
                 ),
                 "ds-0.t_order_$->{20221010..20221012}");
-        assertEquals(tOrderShardingSphereMapper.findAll().size(), 3);
+        assertEquals(3, tOrderShardingSphereMapper.findAll().size());
     }
 }

@@ -29,10 +29,10 @@ public class ContextManagerTests {
     private ShardingSphereDataSource shardingSphereDataSource;
     @Autowired
     TOrderShardingSphereMapper tOrderShardingSphereMapper;
-    
-    
+
+
     @BeforeEach
-    void before(){
+    void before() {
         String newActualDataNodes = "ds-0.t_order_$->{20221010..20221011}";
         String oldLogicTableName = "t_order_sharding_sphere";
         String oldDatabaseName = "sharding_db";
@@ -45,11 +45,11 @@ public class ContextManagerTests {
     void whenRequestToGetActualDataNodesByVintage() {
         String oldLogicTableName = "t_order_sharding_sphere";
         String oldDatabaseName = "sharding_db";
-        assertEquals(LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
+        assertEquals("ds-0.t_order_$->{20221010..20221011}",
+                LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
-                ),
-                "ds-0.t_order_$->{20221010..20221011}");
-        assertEquals(tOrderShardingSphereMapper.findAll().size(), 2);
+                ));
+        assertEquals(2, tOrderShardingSphereMapper.findAll().size());
     }
 
     @Test
@@ -60,11 +60,11 @@ public class ContextManagerTests {
         LocalShardingDatabasesAndTablesUtil.updateActualDataNodesByVintage(
                 shardingSphereDataSource, oldDatabaseName, oldLogicTableName, newActualDataNodes
         );
-        assertEquals(LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
+        assertEquals("ds-0.t_order_$->{20221010..20221012}",
+                LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
-                ),
-                "ds-0.t_order_$->{20221010..20221012}");
-        assertEquals(tOrderShardingSphereMapper.findAll().size(), 3);
+                ));
+        assertEquals(3, tOrderShardingSphereMapper.findAll().size());
     }
 
     @Test
@@ -75,11 +75,11 @@ public class ContextManagerTests {
         LocalShardingDatabasesAndTablesUtil.updateActualDataNodesByJupiter(
                 shardingSphereDataSource, oldDatabaseName, oldLogicTableName, newActualDataNodes
         );
-        assertEquals(LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
+        assertEquals("ds-0.t_order_$->{20221010..20221012}",
+                LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
-                ),
-                "ds-0.t_order_$->{20221010..20221012}");
-        assertEquals(tOrderShardingSphereMapper.findAll().size(), 3);
+                ));
+        assertEquals(3, tOrderShardingSphereMapper.findAll().size());
     }
 
     @Test
@@ -115,10 +115,10 @@ public class ContextManagerTests {
                     newRuleConfigList.add(oldAlgorithmConfig);
                 });
         contextManager.alterRuleConfiguration(oldDatabaseName, newRuleConfigList);
-        assertEquals(LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
+        assertEquals("ds-0.t_order_$->{20221010..20221011}",
+                LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName
-                ),
-                "ds-0.t_order_$->{20221010..20221011}");
+                ));
     }
 
     @SneakyThrows(ReflectiveOperationException.class)
