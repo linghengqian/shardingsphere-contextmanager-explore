@@ -3,6 +3,7 @@ package com.lingh.shardingspherev521jdk8.utils;
 import lombok.SneakyThrows;
 import org.apache.shardingsphere.driver.jdbc.core.datasource.ShardingSphereDataSource;
 import org.apache.shardingsphere.infra.config.rule.RuleConfiguration;
+import org.apache.shardingsphere.infra.metadata.database.rule.ShardingSphereRuleMetaData;
 import org.apache.shardingsphere.mode.manager.ContextManager;
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration;
@@ -35,12 +36,12 @@ public class LocalShardingDatabasesAndTablesUtil {
 
     public static void updateActualDataNodesByJupiter(ShardingSphereDataSource dataSource, String databaseName, String logicTableName, String newActualDataNodes) {
         ContextManager contextManager = getContextManager(dataSource);
-        Optional<ShardingRule> singleRule = contextManager.getMetaDataContexts()
+        ShardingSphereRuleMetaData ruleMetaData = contextManager.getMetaDataContexts()
                 .getMetaData()
                 .getDatabases()
                 .get(databaseName)
-                .getRuleMetaData()
-                .findSingleRule(ShardingRule.class);
+                .getRuleMetaData();
+        Optional<ShardingRule> singleRule = ruleMetaData.findSingleRule(ShardingRule.class);
         assert singleRule.isPresent();
         ShardingRuleConfiguration currentRuleConfig = (ShardingRuleConfiguration) singleRule.get().getConfiguration();
         Collection<ShardingTableRuleConfiguration> toBeAlteredTableRuleConfigList = new LinkedList<>();
@@ -50,6 +51,7 @@ public class LocalShardingDatabasesAndTablesUtil {
                 newTableRuleConfig.setDatabaseShardingStrategy(oldTableRuleConfig.getDatabaseShardingStrategy());
                 newTableRuleConfig.setTableShardingStrategy(oldTableRuleConfig.getTableShardingStrategy());
                 newTableRuleConfig.setKeyGenerateStrategy(oldTableRuleConfig.getKeyGenerateStrategy());
+                newTableRuleConfig.setAuditStrategy(oldTableRuleConfig.getAuditStrategy());
                 toBeAlteredTableRuleConfigList.add(newTableRuleConfig);
             } else {
                 toBeAlteredTableRuleConfigList.add(oldTableRuleConfig);
@@ -58,6 +60,11 @@ public class LocalShardingDatabasesAndTablesUtil {
         currentRuleConfig.setTables(toBeAlteredTableRuleConfigList);
         Collection<RuleConfiguration> toBeAlteredRuleConfigList = new LinkedList<>();
         toBeAlteredRuleConfigList.add(currentRuleConfig);
+        ruleMetaData.getRules().forEach(shardingSphereRule -> {
+            if (!(shardingSphereRule instanceof ShardingRule)){
+                toBeAlteredRuleConfigList.add(shardingSphereRule.getConfiguration());
+            }
+        });
         contextManager.alterRuleConfiguration(databaseName, toBeAlteredRuleConfigList);
     }
 

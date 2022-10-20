@@ -54,6 +54,7 @@ public class LocalShardingDatabasesAndTablesUtil {
                             newTableRuleConfig.setDatabaseShardingStrategy(oldTableRuleConfig.getDatabaseShardingStrategy());
                             newTableRuleConfig.setTableShardingStrategy(oldTableRuleConfig.getTableShardingStrategy());
                             newTableRuleConfig.setKeyGenerateStrategy(oldTableRuleConfig.getKeyGenerateStrategy());
+                            newTableRuleConfig.setAuditStrategy(oldTableRuleConfig.getAuditStrategy());
                             newTableRuleConfigList.add(newTableRuleConfig);
                         } else {
                             newTableRuleConfigList.add(oldTableRuleConfig);
