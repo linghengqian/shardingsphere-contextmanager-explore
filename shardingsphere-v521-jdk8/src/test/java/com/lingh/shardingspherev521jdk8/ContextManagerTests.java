@@ -101,6 +101,7 @@ public class ContextManagerTests {
             }
         });
         contextManager.alterRuleConfiguration(oldDatabaseName, toBeAlteredRuleConfigList);
+        contextManager.reloadDatabase(oldDatabaseName);
         assertEquals("ds-0.t_order_$->{20221010..20221011}",
                 LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName

@@ -109,6 +109,7 @@ public class LocalShardingDatabasesAndTablesUtil {
                     newRuleConfigList.add(oldAlgorithmConfig);
                 });
         contextManager.alterRuleConfiguration(databaseName, newRuleConfigList);
+        contextManager.reloadMetaData(databaseName);
     }
 
     @SneakyThrows(ReflectiveOperationException.class)

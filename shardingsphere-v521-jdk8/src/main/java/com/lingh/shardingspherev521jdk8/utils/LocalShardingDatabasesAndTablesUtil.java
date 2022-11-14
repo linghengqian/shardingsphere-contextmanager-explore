@@ -61,11 +61,12 @@ public class LocalShardingDatabasesAndTablesUtil {
         Collection<RuleConfiguration> toBeAlteredRuleConfigList = new LinkedList<>();
         toBeAlteredRuleConfigList.add(currentRuleConfig);
         ruleMetaData.getRules().forEach(shardingSphereRule -> {
-            if (!(shardingSphereRule instanceof ShardingRule)){
+            if (!(shardingSphereRule instanceof ShardingRule)) {
                 toBeAlteredRuleConfigList.add(shardingSphereRule.getConfiguration());
             }
         });
         contextManager.alterRuleConfiguration(databaseName, toBeAlteredRuleConfigList);
+        contextManager.reloadDatabase(databaseName);
     }
 
     @SneakyThrows(ReflectiveOperationException.class)
