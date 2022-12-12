@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+## self config ##
+**/maven-wrapper.jar
