@@ -1,0 +1,29 @@
+databaseName: "sharding_db"
+
+dataSources:
+  ds-0:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: org.h2.Driver
+    jdbcUrl: jdbc:h2:mem:slave2;MODE=MYSQL;DATABASE_TO_LOWER=TRUE;INIT=RUNSCRIPT FROM 'classpath:db/schema.sql'
+    username: sa
+    password: ""
+
+rules:
+  - !SHARDING
+    tables:
+      t_order_sharding_sphere:
+        actualDataNodes: ds-0.t_order_$->{20221010..20221011}
+        tableStrategy:
+          standard:
+            shardingColumn: create_time
+            shardingAlgorithmName: lingh-interval
+    shardingAlgorithms:
+      lingh-interval:
+        type: INTERVAL
+        props:
+          datetime-pattern: "yyyy-MM-dd HH:mm:ss.SSS"
+          datetime-lower: "2022-10-10 00:00:00.000"
+          datetime-upper: "2022-10-11 23:59:59.999"
+          sharding-suffix-pattern: "_yyyyMMdd"
+          datetime-interval-amount: 1
+          datetime-interval-unit: "DAYS"
