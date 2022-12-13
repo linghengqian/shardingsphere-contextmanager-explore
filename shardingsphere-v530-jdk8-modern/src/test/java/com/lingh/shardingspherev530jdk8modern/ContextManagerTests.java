@@ -97,6 +97,8 @@ public class ContextManagerTests {
         ruleMetaData.getRules().stream().filter(shardingSphereRule -> !(shardingSphereRule instanceof ShardingRule))
                 .forEach(shardingSphereRule -> toBeAlteredRuleConfigList.add(shardingSphereRule.getConfiguration()));
         contextManager.alterRuleConfiguration(oldDatabaseName, toBeAlteredRuleConfigList);
+        contextManager.getMetaDataContexts().getPersistService().getDatabaseRulePersistService().persist(oldDatabaseName, toBeAlteredRuleConfigList);
+        contextManager.reloadDatabaseMetaData(oldDatabaseName);
         assertEquals("ds-0.t_order_$->{20221010..20221011}",
                 LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
                         shardingSphereDataSource, oldDatabaseName, oldLogicTableName

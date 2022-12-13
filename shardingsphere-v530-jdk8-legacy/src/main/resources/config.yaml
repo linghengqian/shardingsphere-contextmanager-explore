@@ -1,10 +1,5 @@
 databaseName: "sharding_db"
 
-mode:
-  type: Standalone
-  repository:
-    type: JDBC
-
 dataSources:
   ds-0:
     dataSourceClassName: com.zaxxer.hikari.HikariDataSource

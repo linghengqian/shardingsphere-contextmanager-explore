@@ -23,7 +23,6 @@ public class ShardingsphereV530Jdk8LegacyApplication {
     @Bean
     DataSource shardingSphereDataSource() {
         try {
-            // Since jdk 9, we should use `java.io.InputStream#readAllBytes` instead of `org.springframework.util.StreamUtils#copyToByteArray`
             byte[] bytes = StreamUtils.copyToByteArray(new ClassPathResource("config.yaml").getInputStream());
             return YamlShardingSphereDataSourceFactory.createDataSource(bytes);
         } catch (SQLException | IOException e) {

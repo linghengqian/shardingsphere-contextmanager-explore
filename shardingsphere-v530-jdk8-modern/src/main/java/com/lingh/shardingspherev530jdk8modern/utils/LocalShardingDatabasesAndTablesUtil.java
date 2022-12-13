@@ -63,6 +63,8 @@ public class LocalShardingDatabasesAndTablesUtil {
         ruleMetaData.getRules().stream().filter(shardingSphereRule -> !(shardingSphereRule instanceof ShardingRule))
                 .forEach(shardingSphereRule -> toBeAlteredRuleConfigList.add(shardingSphereRule.getConfiguration()));
         contextManager.alterRuleConfiguration(databaseName, toBeAlteredRuleConfigList);
+        contextManager.getMetaDataContexts().getPersistService().getDatabaseRulePersistService().persist(databaseName, toBeAlteredRuleConfigList);
+        contextManager.reloadDatabaseMetaData(databaseName);
     }
 
     private static ContextManager getContextManager(final DataSource dataSource) {
