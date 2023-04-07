@@ -1,7 +1,6 @@
 package com.lingh.shardingspherev530jdk8legacy.utils;
 
-import lombok.SneakyThrows;
-import org.apache.shardingsphere.driver.jdbc.core.datasource.ShardingSphereDataSource;
+import org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection;
 import org.apache.shardingsphere.infra.config.rule.RuleConfiguration;
 import org.apache.shardingsphere.infra.metadata.database.rule.ShardingSphereRuleMetaData;
 import org.apache.shardingsphere.mode.manager.ContextManager;
@@ -9,14 +8,15 @@ import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration;
 import org.apache.shardingsphere.sharding.rule.ShardingRule;
 
-import java.lang.reflect.Field;
+import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class LocalShardingDatabasesAndTablesUtil {
-    public static String getActualDataNodesByVintage(ShardingSphereDataSource dataSource, String databaseName, String logicTableName) {
+    public static String getActualDataNodesByVintage(DataSource dataSource, String databaseName, String logicTableName) {
         AtomicReference<String> currentActualDataNodes = new AtomicReference<>();
         Optional<ShardingRule> singleRule = getContextManager(dataSource).getMetaDataContexts()
                 .getMetaData()
@@ -34,7 +34,7 @@ public class LocalShardingDatabasesAndTablesUtil {
         return currentActualDataNodes.get();
     }
 
-    public static void updateActualDataNodesByJupiter(ShardingSphereDataSource dataSource, String databaseName, String logicTableName, String newActualDataNodes) {
+    public static void updateActualDataNodesByJupiter(DataSource dataSource, String databaseName, String logicTableName, String newActualDataNodes) {
         ContextManager contextManager = getContextManager(dataSource);
         ShardingSphereRuleMetaData ruleMetaData = contextManager.getMetaDataContexts()
                 .getMetaData()
@@ -67,10 +67,11 @@ public class LocalShardingDatabasesAndTablesUtil {
         contextManager.reloadDatabaseMetaData(databaseName);
     }
 
-    @SneakyThrows(ReflectiveOperationException.class)
-    private static ContextManager getContextManager(final ShardingSphereDataSource dataSource) {
-        Field field = ShardingSphereDataSource.class.getDeclaredField("contextManager");
-        field.setAccessible(true);
-        return (ContextManager) field.get(dataSource);
+    private static ContextManager getContextManager(final DataSource dataSource) {
+        try (ShardingSphereConnection connection = dataSource.getConnection().unwrap(ShardingSphereConnection.class)) {
+            return connection.getContextManager();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

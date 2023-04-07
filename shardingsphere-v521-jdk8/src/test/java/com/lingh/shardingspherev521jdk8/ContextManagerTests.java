@@ -2,8 +2,7 @@ package com.lingh.shardingspherev521jdk8;
 
 import com.lingh.shardingspherev521jdk8.mapper.TOrderShardingSphereMapper;
 import com.lingh.shardingspherev521jdk8.utils.LocalShardingDatabasesAndTablesUtil;
-import lombok.SneakyThrows;
-import org.apache.shardingsphere.driver.jdbc.core.datasource.ShardingSphereDataSource;
+import org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection;
 import org.apache.shardingsphere.infra.config.algorithm.AlgorithmConfiguration;
 import org.apache.shardingsphere.infra.config.rule.RuleConfiguration;
 import org.apache.shardingsphere.infra.metadata.database.rule.ShardingSphereRuleMetaData;
@@ -16,19 +15,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
-import java.lang.reflect.Field;
+import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 public class ContextManagerTests {
     @Resource
-    private ShardingSphereDataSource shardingSphereDataSource;
+    private DataSource dataSource;
     @Autowired
     TOrderShardingSphereMapper tOrderShardingSphereMapper;
 
@@ -39,8 +41,21 @@ public class ContextManagerTests {
         String oldLogicTableName = "t_order_sharding_sphere";
         String oldDatabaseName = "sharding_db";
         LocalShardingDatabasesAndTablesUtil.updateActualDataNodesByJupiter(
-                shardingSphereDataSource, oldDatabaseName, oldLogicTableName, newActualDataNodes
+                dataSource, oldDatabaseName, oldLogicTableName, newActualDataNodes
         );
+    }
+
+    @Test
+    void testMultipleUpdates() {
+        IntStream.range(0, 20).forEach(i -> {
+            String newActualDataNodes = "ds-0.t_order_$->{20221010..20221012}";
+            String oldLogicTableName = "t_order_sharding_sphere";
+            String oldDatabaseName = "sharding_db";
+            LocalShardingDatabasesAndTablesUtil.updateActualDataNodesByJupiter(
+                    dataSource, oldDatabaseName, oldLogicTableName, newActualDataNodes
+            );
+        });
+        assertDoesNotThrow(() -> tOrderShardingSphereMapper.findAll());
     }
 
     @Test
@@ -49,7 +64,7 @@ public class ContextManagerTests {
         String oldDatabaseName = "sharding_db";
         assertEquals("ds-0.t_order_$->{20221010..20221011}",
                 LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
-                        shardingSphereDataSource, oldDatabaseName, oldLogicTableName
+                        dataSource, oldDatabaseName, oldLogicTableName
                 ));
         assertEquals(2, tOrderShardingSphereMapper.findAll().size());
     }
@@ -60,11 +75,11 @@ public class ContextManagerTests {
         String oldLogicTableName = "t_order_sharding_sphere";
         String oldDatabaseName = "sharding_db";
         LocalShardingDatabasesAndTablesUtil.updateActualDataNodesByJupiter(
-                shardingSphereDataSource, oldDatabaseName, oldLogicTableName, newActualDataNodes
+                dataSource, oldDatabaseName, oldLogicTableName, newActualDataNodes
         );
         assertEquals("ds-0.t_order_$->{20221010..20221012}",
                 LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
-                        shardingSphereDataSource, oldDatabaseName, oldLogicTableName
+                        dataSource, oldDatabaseName, oldLogicTableName
                 ));
         assertEquals(3, tOrderShardingSphereMapper.findAll().size());
     }
@@ -73,7 +88,7 @@ public class ContextManagerTests {
     void whenRequestToRecreateAlgorithmConfiguration() {
         String oldDatabaseName = "sharding_db";
         String oldLogicTableName = "t_order_sharding_sphere";
-        ContextManager contextManager = getContextManager(shardingSphereDataSource);
+        ContextManager contextManager = getContextManager(dataSource);
         ShardingSphereRuleMetaData ruleMetaData = contextManager.getMetaDataContexts()
                 .getMetaData()
                 .getDatabases()
@@ -104,14 +119,15 @@ public class ContextManagerTests {
         contextManager.reloadDatabase(oldDatabaseName);
         assertEquals("ds-0.t_order_$->{20221010..20221011}",
                 LocalShardingDatabasesAndTablesUtil.getActualDataNodesByVintage(
-                        shardingSphereDataSource, oldDatabaseName, oldLogicTableName
+                        dataSource, oldDatabaseName, oldLogicTableName
                 ));
     }
 
-    @SneakyThrows(ReflectiveOperationException.class)
-    private static ContextManager getContextManager(final ShardingSphereDataSource dataSource) {
-        Field field = ShardingSphereDataSource.class.getDeclaredField("contextManager");
-        field.setAccessible(true);
-        return (ContextManager) field.get(dataSource);
+    private static ContextManager getContextManager(final DataSource dataSource) {
+        try (ShardingSphereConnection connection = dataSource.getConnection().unwrap(ShardingSphereConnection.class)) {
+            return connection.getContextManager();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
