@@ -5,6 +5,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StreamUtils;
 
@@ -20,8 +21,9 @@ public class ShardingsphereV530Jdk8LegacyApplication {
         SpringApplication.run(ShardingsphereV530Jdk8LegacyApplication.class, args);
     }
 
+    @Primary
     @Bean
-    DataSource shardingSphereDataSource() {
+    DataSource dataSource() {
         try {
             byte[] bytes = StreamUtils.copyToByteArray(new ClassPathResource("config.yaml").getInputStream());
             return YamlShardingSphereDataSourceFactory.createDataSource(bytes);
@@ -29,5 +31,4 @@ public class ShardingsphereV530Jdk8LegacyApplication {
             throw new RuntimeException(e);
         }
     }
-
 }
